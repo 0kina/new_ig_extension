@@ -1,0 +1,12 @@
+{
+  "name": "New Incremental Extension",
+  "description": "新しい放置ゲームの拡張",
+  "version": "1.0",
+  "manifest_version": 3,
+  "content_scripts": [
+    {
+      "js": ["main.js"],
+      "matches": ["https://dem08656775.github.io/newincrementalgame/"]
+    }
+  ]
+}
