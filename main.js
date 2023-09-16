@@ -31,6 +31,10 @@ let spendBrightnessBtn1;
 // shine tab
 let spendShineBtn1, spendBrightnessBtn10, spendBrightnessBtn100, spendBrightnessBtn1000;
 
+// initialization
+let keyToTabInfo = {}
+let currentTab = "basic"
+
 // find buttons
 setInterval(() => {
   if (currentTab === basicTab) {
@@ -86,6 +90,13 @@ const pushBasicTabHotKey = (event) => {
   }
 }
 
+tabNames.forEach(tabName => {
+  const tabBtn = document.getElementById(tabName).firstElementChild;
+  tabBtn.addEventListener("click", setCurrentTab);
+  if (tabBtn != null) addHotKeyInfo(tabBtn, tabName[0]);
+  keyToTabInfo[tabName[0]] = new TabInfo(tabName, tabBtn);
+});
+
 // dark tab
 {
   let tempElem = document.getElementById("darkcoinamount").nextElementSibling;
@@ -104,6 +115,54 @@ const pushDarkTabHotKey = (event) => {
   if (event.key == "!") {
     spendBrightnessBtn1.dispatchEvent(new MouseEvent("click"));
   }
+}
+
+// rank tab
+{
+  const inf = 1000000
+  levelShopDiscountThreshold = [
+    [4, 1], [16, 1], [32, 2], [36, 1], [64, 1], [100, 1], [108, 3],
+    [128, 2], [256, 4], [288, 2], [432, 3], [500, 5], [512, 2], [800, 2],
+    [972, 3], [1024, 4], [1728, 3], [2000, 5], [2304, 4], [2700, 3],
+    [4096, 4], [4500, 5], [6400, 4], [8000, 5], [12500, 5], [inf, 0]
+  ]
+  const addLevelShopNextDiscountInfo = (isInitial) => {
+    let levelShopTextElement = document.getElementsByClassName("levelshop")[0];
+    const levelShopText = levelShopTextElement.innerText;
+    const levelPurchaseCount = parseInt(/累計購入回数: (\d+)/.exec(levelShopText)[1]);
+    let currentLevelShopDiscountClass = 0;
+    while (levelShopDiscountThreshold[currentLevelShopDiscountClass][0] <= levelPurchaseCount) {
+      ++currentLevelShopDiscountClass;
+    }
+    const [threshold, levelShopItemId] = levelShopDiscountThreshold[currentLevelShopDiscountClass];
+    if (isInitial) {
+      const nextDiscountElement = levelShopTextElement.appendChild(document.createElement("p"));
+      if (threshold === inf) {
+        nextDiscountElement.innerHTML += `これ以上の価格減少はありません`;
+      } else {
+        nextDiscountElement.innerHTML += `次回の価格減少: ${threshold}回、段位効力${levelShopItemId}`;
+      }
+    } else {
+      const nextDiscountElement = levelShopTextElement.lastElementChild;
+      if (threshold === inf) {
+        nextDiscountElement.innerHTML = nextDiscountElement.innerHTML.replace(
+          /\d+回、段位効力\d/,
+          `これ以上の価格減少はありません`
+        );
+      } else {
+        nextDiscountElement.innerHTML = nextDiscountElement.innerHTML.replace(
+          /\d+回、段位効力\d/,
+          `${threshold}回、段位効力${levelShopItemId}`
+        );
+      }
+    }
+  }
+  addLevelShopNextDiscountInfo(true);
+  setInterval(() => {
+    if (currentTab === rankTab) {
+      addLevelShopNextDiscountInfo(false);
+    }
+  }, 1000);
 }
 
 // shine tab
@@ -129,16 +188,6 @@ const pushShineTabHotKey = (event) => {
     spendShineBtn100.dispatchEvent(new MouseEvent("click"));
   }
 }
-
-keyToTabInfo = {}
-let currentTab = "basic"
-
-tabNames.forEach(tabName => {
-  const tabBtn = document.getElementById(tabName).firstElementChild;
-  tabBtn.addEventListener("click", setCurrentTab);
-  if (tabBtn != null) addHotKeyInfo(tabBtn, tabName[0]);
-  keyToTabInfo[tabName[0]] = new TabInfo(tabName, tabBtn);
-});
 
 document.addEventListener("keydown", pushTabHotKey);
 document.addEventListener("keydown", pushBasicTabHotKey);
