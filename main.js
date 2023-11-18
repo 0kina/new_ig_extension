@@ -1,3 +1,12 @@
+/**
+ * `await sleep(millisecond)`のように使う．
+ */
+const sleep = (millisecond) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, millisecond)
+  });
+}
+
 const basicTab = "basic";
 const darkTab = "dark";
 const optionTab = "option";
@@ -26,6 +35,7 @@ let tabNames = [
 // basic tab
 let levelResetBtn;
 let rankResetBtn;
+let generatorBtns = [];
 // dark tab
 let spendBrightnessBtn1;
 // shine tab
@@ -36,24 +46,36 @@ let keyToTabInfo = {}
 let currentTab = "basic"
 
 // find buttons
+const findBasicTabBtns = () => {
+  if (document.getElementById("levelreset")) {
+    if (typeof levelResetBtn === "undefined") {
+      levelResetBtn = document.getElementById("levelreset").firstElementChild;
+      addHotKeyInfo(levelResetBtn, "Shift + l");
+    }
+  } else {
+    levelResetBtn = undefined
+  }
+  if (document.getElementById("rankreset")) {
+    if (typeof rankResetBtn === "undefined") {
+      rankResetBtn = document.getElementById("rankreset").firstElementChild;
+      addHotKeyInfo(rankResetBtn, "Shift + r");
+    }
+  } else {
+    rankResetBtn = undefined;
+  }
+  if (generatorBtns.length === 0) {
+    genContainter = document.getElementsByClassName("generators-container")[0];
+    for (let i = 0; i < 8; ++i) {
+      const generator = genContainter.children[i];
+      generatorBtns.push(generator.children[1]);
+      addHotKeyInfo(generatorBtns[i], i + 1);
+    }
+  }
+}
+
 setInterval(() => {
   if (currentTab === basicTab) {
-    if (document.getElementById("levelreset")) {
-      if (typeof levelResetBtn === "undefined") {
-        levelResetBtn = document.getElementById("levelreset").firstElementChild;
-        addHotKeyInfo(levelResetBtn, "Shift + l");
-      }
-    } else {
-      levelResetBtn = undefined
-    }
-    if (document.getElementById("rankreset")) {
-      if (typeof rankResetBtn === "undefined") {
-        rankResetBtn = document.getElementById("rankreset").firstElementChild;
-        addHotKeyInfo(rankResetBtn, "Shift + r");
-      }
-    } else {
-      rankResetBtn = undefined;
-    }
+    findBasicTabBtns();
   }
 }, 300);
 
@@ -77,8 +99,12 @@ const setCurrentTab = (event) => {
   }
 }
 
-const addHotKeyInfo = (btn, key) => {
-  btn.textContent = `${btn.textContent} [${key}]`;
+const addHotKeyInfo = async (btn, key) => {
+  // この関数を呼び出す直前にボタンの文字列が変化している場合，`btn.textContent`によって
+  // 古いtextContentにアクセスする可能性がある．
+  // 短時間だけスリープさせることで正しいテキストにアクセスできるようにする．
+  await sleep(20);
+  btn.textContent = `${btn.textContent}[${key}]`;
 }
 
 const pushBasicTabHotKey = (event) => {
@@ -87,6 +113,17 @@ const pushBasicTabHotKey = (event) => {
     levelResetBtn.dispatchEvent(new MouseEvent("click"));
   } else if (event.key == "R" && typeof rankResetBtn !== "undefined") {
     rankResetBtn.dispatchEvent(new MouseEvent("click"));
+  }
+  const oneToEightRegExp = new RegExp(/^[1-8]$/)
+  if (oneToEightRegExp.test(event.key)) {
+    const btnIdx = parseInt(event.key) - 1
+    generatorBtns[btnIdx].dispatchEvent(new MouseEvent("click"))
+    genContainter = document.getElementsByClassName("generators-container")[0];
+    const generator = genContainter.children[btnIdx];
+    const oldText = generatorBtns[btnIdx].textContent;
+    generatorBtns[btnIdx] = generator.children[1];
+    // 発生器の価格変更に伴いボタンが更新されるため，ホットキー表示を再度追加する．
+    addHotKeyInfo(generatorBtns[btnIdx], btnIdx + 1, oldText);
   }
 }
 
