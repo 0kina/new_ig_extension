@@ -18,20 +18,16 @@ const worldTab = "world";
 const chipTab = "chip";
 const trophyTab = "trophy";
 
-let tabNames = [
-  basicTab,
-  darkTab,
-  optionTab,
-  levelTab,
-  rankTab,
-  autoTab,
-  shineTab,
-  worldTab,
-  chipTab,
-  trophyTab
-]
+const addHotKeyInfo = async (btn, key) => {
+  // この関数を呼び出す直前にボタンの文字列が変化している場合，`btn.textContent`によって
+  // 古いtextContentにアクセスする可能性がある．
+  // 短時間だけスリープさせることで正しいテキストにアクセスできるようにする．
+  await sleep(20);
+  btn.textContent = `${btn.textContent}[${key}]`;
+}
 
 // buttons
+let tabBtns = {};
 // basic tab
 let levelResetBtn;
 let rankResetBtn;
@@ -41,9 +37,31 @@ let spendBrightnessBtn1;
 // shine tab
 let spendShineBtn1, spendBrightnessBtn10, spendBrightnessBtn100, spendBrightnessBtn1000;
 
-// initialization
-let keyToTabInfo = {}
-let currentTab = "basic"
+const initialize = () => {
+  currentTab = basicTab
+}
+
+initialize();
+
+// tab buttons
+tabs = Array.from(document.getElementsByClassName("tabs")[0].children)
+for (tab of tabs) {
+  const tabBtn = tab.firstElementChild;
+  const tabId = tab.id;
+  tabBtn.addEventListener("click", () => {
+    console.log("Next tab: " + tabId);
+    currentTab = tabId;
+  });
+  const hotkey = tab.id[0];
+  addHotKeyInfo(tabBtn, hotkey);
+  tabBtns[hotkey] = tabBtn;
+}
+
+const pushTabHotKey = (event) => {
+  if (!(event.key in tabBtns)) return;
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  tabBtns[event.key].dispatchEvent(new MouseEvent("click"))
+}
 
 // find buttons
 const findBasicTabBtns = () => {
@@ -79,32 +97,9 @@ setInterval(() => {
   }
 }, 300);
 
-const pushTabHotKey = (event) => {
-  if (!(event.key in keyToTabInfo)) return;
-  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-  keyToTabInfo[event.key].tabBtn.dispatchEvent(new MouseEvent("click"))
-}
-
 function TabInfo(tabName, tabBtn) {
   this.tabName = tabName;
   this.tabBtn = tabBtn;
-}
-
-const setCurrentTab = (event) => {
-  for (key in keyToTabInfo) {
-    if (event.target == keyToTabInfo[key].tabBtn) {
-      currentTab = keyToTabInfo[key].tabName;
-      break;
-    }
-  }
-}
-
-const addHotKeyInfo = async (btn, key) => {
-  // この関数を呼び出す直前にボタンの文字列が変化している場合，`btn.textContent`によって
-  // 古いtextContentにアクセスする可能性がある．
-  // 短時間だけスリープさせることで正しいテキストにアクセスできるようにする．
-  await sleep(20);
-  btn.textContent = `${btn.textContent}[${key}]`;
 }
 
 const pushBasicTabHotKey = (event) => {
@@ -126,13 +121,6 @@ const pushBasicTabHotKey = (event) => {
     addHotKeyInfo(generatorBtns[btnIdx], btnIdx + 1, oldText);
   }
 }
-
-tabNames.forEach(tabName => {
-  const tabBtn = document.getElementById(tabName).firstElementChild;
-  tabBtn.addEventListener("click", setCurrentTab);
-  if (tabBtn != null) addHotKeyInfo(tabBtn, tabName[0]);
-  keyToTabInfo[tabName[0]] = new TabInfo(tabName, tabBtn);
-});
 
 // dark tab
 {
