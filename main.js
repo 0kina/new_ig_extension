@@ -36,6 +36,8 @@ let generatorBtns = [];
 let spendBrightnessBtn1;
 // shine tab
 let spendShineBtn1, spendBrightnessBtn10, spendBrightnessBtn100, spendBrightnessBtn1000;
+// world tab
+let worldBtns = [];
 
 const initialize = () => {
   currentTab = basicTab
@@ -214,7 +216,28 @@ const pushShineTabHotKey = (event) => {
   }
 }
 
+// world buttons
+worlds = Array.from(document.getElementsByClassName("worlds"))
+for (let i = 0; i < 10; ++i) {
+  const worldBtn = worlds[i].firstElementChild;
+  worldBtns.push(worldBtn);
+  addHotKeyInfo(worldBtn, i + 1);
+}
+const pushWorldTabHotKey = (event) => {
+  console.log(currentTab);
+  if (currentTab != worldTab) return;
+  const zeroToNingeRegExp = new RegExp(/^[0-9]$/)
+  console.log("foo");
+  if (zeroToNingeRegExp.test(event.key)) {
+    console.log("HI");
+    const btnIdx = (parseInt(event.key) + 9) % 10;
+    console.log(btnIdx);
+    worldBtns[btnIdx].dispatchEvent(new MouseEvent("click"))
+  }
+}
+
 document.addEventListener("keydown", pushTabHotKey);
 document.addEventListener("keydown", pushBasicTabHotKey);
 document.addEventListener("keydown", pushDarkTabHotKey);
 document.addEventListener("keydown", pushShineTabHotKey);
+document.addEventListener("keydown", pushWorldTabHotKey);
